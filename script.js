@@ -68,7 +68,7 @@ function endGame({ winner, line }) {
     active = false;
 
     if (winner) {
-        stateEl.textContent = `${winner} 勝)`;
+        stateEl.textContent = `${winner} 勝`;
         line.forEach(i => cells[i].classList.add('win'));
 
         if (winner === 'X') scoreX++;
