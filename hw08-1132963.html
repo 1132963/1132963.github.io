@@ -7,34 +7,37 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <main class="container">
-        <h1>XO 井字棋</h1>
-        <div class="status">
-            <span>目前輪到：<strong id="turn">X</strong></span>
-            <span id="state"></span>
-        </div>
-        <section id="board" class="board" aria-label="井字棋棋盤">
-            <button class="cell" data-idx="0"></button>
-            <button class="cell" data-idx="1"></button>
-            <button class="cell" data-idx="2"></button>
-            <button class="cell" data-idx="3"></button>
-            <button class="cell" data-idx="4"></button>
-            <button class="cell" data-idx="5"></button>
-            <button class="cell" data-idx="6"></button>
-            <button class="cell" data-idx="7"></button>
-            <button class="cell" data-idx="8"></button>
-        </section>
-        <div class=“controls”>
-          <button id=“reset”>重開一局</button>
-          <button id="reset-all">重置計分</button>
-     </div>
-     <div class=“scoreboard”>
-      <h2>計分板</h2>
-      <p>X 勝場：<span id=“score-x”>0</span></p>
-      <p>O 勝場：<span id=“score-o”>0</span></p>
-      <p>平手次數：<span id=“score-draw”>0</span></p>
-     </div>
-    </main>
-     <script src="script.js" defer></script>
-    </body>
-</html>
+<main class="container">
+    <h1>XO 井字棋</h1>
+
+    <div class="status">
+        <span>目前輪到:<strong id="turn">X</strong></span>
+        <span id="state"></span>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+        <div>X 勝<span id="scoreX">0</span></div>
+        <div>O 勝<span id="scoreO">0</span></div>
+        <div>sK<span id="scoreTie">0</span></div>
+    </div>
+
+    <section id="board" class="board" aria-label="井字棋">
+        <button class="cell" data-idx="0"></button>
+        <button class="cell" data-idx="1"></button>
+        <button class="cell" data-idx="2"></button>
+        <button class="cell" data-idx="3"></button>
+        <button class="cell" data-idx="4"></button>
+        <button class="cell" data-idx="5"></button>
+        <button class="cell" data-idx="6"></button>
+        <button class="cell" data-idx="7"></button>
+        <button class="cell" data-idx="8"></button>
+    </section>
+
+    <div class="controls">
+        <button id="reset">重新開始</button>
+        <button id="resetScore">重新計分</button>
+    </div>
+</main>
+
+<script src="script.js" defer></script>
