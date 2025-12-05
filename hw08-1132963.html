@@ -11,18 +11,18 @@
     <h1>XO 井字棋</h1>
 
     <div class="status">
-        <span>目前輪到:<strong id="turn">X</strong></span>
+        <span>輪到<strong id="turn">X</strong></span>
         <span id="state"></span>
     </div>
 
     <!-- Scoreboard -->
     <div class="scoreboard">
-        <div>X 勝<span id="scoreX">0</span></div>
-        <div>O 勝<span id="scoreO">0</span></div>
-        <div>平手</div><span id="scoreTie">0</span></div>
+        <div>X 勝<span id="scoreX">0</span></div>
+        <div>O 勝<span id="scoreO">0</span></div>
+        <div>平手<span id="scoreTie">0</span></div>
     </div>
 
-    <section id="board" class="board" aria-label="井字棋">
+    <section id="board" class="board" aria-label="棋盤">
         <button class="cell" data-idx="0"></button>
         <button class="cell" data-idx="1"></button>
         <button class="cell" data-idx="2"></button>
@@ -35,7 +35,7 @@
     </section>
 
     <div class="controls">
-        <button id="reset">重新開始</button>
+        <button id="reset">͋重新開始</button>
         <button id="resetScore">重新計分</button>
     </div>
 </main>
