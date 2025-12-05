@@ -1,6 +1,6 @@
 :root {
     --bg: #ffffff;
-    --text: #0e2de7;
+    --text: #0018a5;
     --x: #ff6b6b;
     --o: #59ecff;
     --win: #ffe066;
@@ -78,7 +78,13 @@ h1 {
 .controls {
     margin-top: 12px;
 }
-
+.scoreboard {
+    margin: 12px 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 18px;
+}
 button {
     padding: 8px 12px;
     border-radius: 10px;
