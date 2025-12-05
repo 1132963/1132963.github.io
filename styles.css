@@ -5,7 +5,6 @@
     --o: #59ecff;
     --win: #ffe066;
 }
-
 * {
     box-sizing: border-box;
 }
@@ -13,7 +12,6 @@
 html, body {
     height: 100%;
 }
-
 body {
     margin: 0;
     font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
@@ -95,6 +93,6 @@ button {
 }
 
 button:disabled {
-    opacity: .5;.5;
+    opacity: .5;
     cursor: not-allowed;
 }
