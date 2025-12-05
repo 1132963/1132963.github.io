@@ -104,3 +104,4 @@ cells.forEach(cell => {
 
 btnReset.addEventListener('click', init);
 btnResetScore.addEventListener('click', resetScoreboard);
+init();
