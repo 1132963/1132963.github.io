@@ -1,19 +1,16 @@
 const boardEl = document.getElementById('board');
 const cells = Array.from(document.querySelectorAll('.cell'));
 const btnReset = document.getElementById('reset');
-const btnResetAll = document.getElementById('reset-all');
+const btnResetScore = document.getElementById('resetScore');
 const turnEl = document.getElementById('turn');
 const stateEl = document.getElementById('state');
 
-const scoreXEl = document.getElementById('score-x');
-const scoreOEl = document.getElementById('score-o');
-const scoreDrawEl = document.getElementById('score-draw');
+const scoreXEl = document.getElementById('scoreX');
+const scoreOEl = document.getElementById('scoreO');
+const scoreTieEl = document.getElementById('scoreTie');
 
 let board, current, active;
-
-let scoreX = 0;
-let scoreO = 0;
-let scoreDraw = 0;
+let scoreX = 0, scoreO = 0, scoreTie = 0;
 
 const WIN_LINES = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -25,21 +22,19 @@ function init() {
     board = Array(9).fill('');
     current = 'X';
     active = true;
-
     cells.forEach(c => {
         c.textContent = '';
         c.className = 'cell';
         c.disabled = false;
     });
-
     turnEl.textContent = current;
     stateEl.textContent = '';
 }
 
 function place(idx) {
     if (!active || board[idx]) return;
-    board[idx] = current;
 
+    board[idx] = current;
     const cell = cells[idx];
     cell.textContent = current;
     cell.classList.add(current.toLowerCase());
@@ -73,35 +68,32 @@ function endGame({ winner, line }) {
     active = false;
 
     if (winner) {
-        stateEl.textContent = `${winner} 勝利！`;
-
+        stateEl.textContent = `${winner} 勝)`;
         line.forEach(i => cells[i].classList.add('win'));
 
-        // 計分
         if (winner === 'X') scoreX++;
         else scoreO++;
-
     } else {
         stateEl.textContent = '平手';
-        scoreDraw++;
+        scoreTie++;
     }
 
-    updateScoreboard();
+    updateScore();
     cells.forEach(c => c.disabled = true);
 }
 
-function updateScoreboard() {
+function updateScore() {
     scoreXEl.textContent = scoreX;
     scoreOEl.textContent = scoreO;
-    scoreDrawEl.textContent = scoreDraw;
+    scoreTieEl.textContent = scoreTie;
 }
 
-btnResetAll.addEventListener('click', () => {
+function resetScoreboard() {
     scoreX = 0;
     scoreO = 0;
-    scoreDraw = 0;
-    updateScoreboard();
-});
+    scoreTie = 0;
+    updateScore();
+}
 
 cells.forEach(cell => {
     cell.addEventListener('click', () => {
@@ -111,5 +103,4 @@ cells.forEach(cell => {
 });
 
 btnReset.addEventListener('click', init);
-
-init();
+btnResetScore.addEventListener('click', resetScoreboard);
