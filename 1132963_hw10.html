@@ -1,15 +1,366 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <title>Title</title>
-        <link rel="stylesheet" href="styles.css" />
-        <script src="script.js"></script>
-    </head>
-    <body>
-        <h1 class="title">Hello World</h1>
-        <div id="mainDiv">Hello Div</div>
-        <br />
-        <button onclick="buttonClicked()">Click me</button>
-    </body>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1132963 -HW10</title>
+<style>
+  :root { --board-size: 480px; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #f2f6f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .container { width: calc(var(--board-size) + 40px); }
+
+  h1 { text-align: center; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .board-wrap {
+    padding: 10px;
+    background: linear-gradient(180deg,#e6f0ea,#dbeee0);
+    border-radius: 12px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8,1fr);
+    gap: 4px;
+    background: #2b6b3f;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .cell {
+    background: #3a8f5b;
+    border-radius: 6px;
+    aspect-ratio: 1;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .cell.possible {
+    background: linear-gradient(
+      180deg,
+      rgba(45,157,85,.35),
+      rgba(45,157,85,.15)
+    );
+  }
+
+  .hint {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #0b3f1a;
+  }
+
+  .piece {
+    width: 80%;
+    height: 80%;
+    margin: auto;
+    border-radius: 50%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+  }
+
+  .piece::before,
+  .piece::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden;
+  }
+
+  .piece::before { background: radial-gradient(circle at 30% 30%, #555, #000); }
+  .piece::after { background: radial-gradient(circle at 30% 30%, #fff, #ccc); transform: rotateY(180deg); }
+
+  .piece.flip { transform: rotateY(180deg); }
+  .piece.white { transform: rotateY(180deg); }
+
+  .legend { margin-top: 10px; font-size: 13px; }
+
+  @media (max-width:520px) { :root { --board-size: 360px; } }
+</style>
+</head>
+<body>
+<main class="container">
+  <h1>Othello / Reversi</h1>
+  <section class="controls">
+    <div class="status">輪到：<span id="currentPlayer">黑</span></div>
+    <div class="difficulty">
+      難度：
+      <label><input type="radio" name="aiLevel" value="easy"> 基本</label>
+      <label><input type="radio" name="aiLevel" value="hard" checked> 進階</label>
+    </div>
+    <div class="score">黑 <span id="blackScore">2</span> : 白 <span id="whiteScore">2</span></div>
+    <button id="restartBtn">重新開始</button>
+  </section>
+  <section class="board-wrap">
+    <div id="board" class="board"></div>
+  </section>
+  <section class="legend">綠色格子可下，數字為可翻棋數</section>
+</main>
+
+<script>
+const SIZE = 8;
+const HUMAN = 1, AI = 2;
+let board = [], current = HUMAN, aiLevel = 'hard', aiThinking = false, gameOver = false;
+
+const boardEl = document.getElementById('board');
+const currentPlayerEl = document.getElementById('currentPlayer');
+const blackScoreEl = document.getElementById('blackScore');
+const whiteScoreEl = document.getElementById('whiteScore');
+const restartBtn = document.getElementById('restartBtn');
+
+const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+
+const WEIGHT = [
+  [120,-20,20,5,5,20,-20,120],
+  [-20,-40,-5,-5,-5,-5,-40,-20],
+  [20,-5,15,3,3,15,-5,20],
+  [5,-5,3,3,3,3,-5,5],
+  [5,-5,3,3,3,3,-5,5],
+  [20,-5,15,3,3,15,-5,20],
+  [-20,-40,-5,-5,-5,-5,-40,-20],
+  [120,-20,20,5,5,20,-20,120],
+];
+
+function initBoard() {
+  board = Array.from({length: SIZE}, ()=>Array(SIZE).fill(0));
+  const m = SIZE/2;
+  board[m-1][m-1] = board[m][m] = AI;
+  board[m-1][m] = board[m][m-1] = HUMAN;
+  current = HUMAN;
+  aiThinking = false;
+  gameOver = false;
+  render();
+}
+
+function within(r,c){ return r>=0&&r<SIZE&&c>=0&&c<SIZE; }
+
+function flipsForMove(r,c,p){
+  if(board[r][c]!==0) return [];
+  const o = p===HUMAN?AI:HUMAN;
+  let res=[];
+  for(const [dr,dc] of DIRS){
+    let rr=r+dr,cc=c+dc,line=[];
+    while(within(rr,cc)&&board[rr][cc]===o){
+      line.push([rr,cc]); rr+=dr; cc+=dc;
+    }
+    if(line.length&&within(rr,cc)&&board[rr][cc]===p) res.push(...line);
+  }
+  return res;
+}
+
+function getLegalMoves(p){
+  const m=new Map();
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const f=flipsForMove(r,c,p);
+    if(f.length) m.set(`${r},${c}`, f);
+  }
+  return m;
+}
+
+function cloneBoard(b){ return b.map(r=>r.slice()); }
+
+function getLegalMovesSim(b,p){
+  const m=new Map();
+  const o=p===HUMAN?AI:HUMAN;
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    if(b[r][c]!==0) continue;
+    let res=[];
+    for(const[dr,dc]of DIRS){
+      let rr=r+dr, cc=c+dc, line=[];
+      while(rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&b[rr][cc]===o){
+        line.push([rr,cc]); rr+=dr; cc+=dc;
+      }
+      if(line.length&&rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&b[rr][cc]===p)
+        res.push(...line);
+    }
+    if(res.length) m.set(`${r},${c}`,res);
+  }
+  return m;
+}
+
+function applyMoveSim(b,r,c,p,f){
+  b[r][c]=p;
+  f.forEach(([rr,cc])=>b[rr][cc]=p);
+}
+
+function evaluateBoard(b){
+  let s=0;
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    if(b[r][c]===AI) s+=WEIGHT[r][c];
+    else if(b[r][c]===HUMAN) s-=WEIGHT[r][c];
+  }
+  return s;
+}
+
+function computeScore(){
+  let b=0,w=0;
+  board.flat().forEach(v=>v===HUMAN?b++:v===AI&&w++);
+  return {b,w};
+}
+
+function render(){
+  boardEl.innerHTML='';
+  const moves=getLegalMoves(current);
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const cell=document.createElement('div');
+    cell.className='cell';
+    if(board[r][c]){
+      const p=document.createElement('div');
+      p.className='piece';
+      if(board[r][c]===AI) p.classList.add('white');
+      cell.appendChild(p);
+    }
+    const k=`${r},${c}`;
+    if(current===HUMAN && moves.has(k)){
+      cell.classList.add('possible');
+      const h=document.createElement('div');
+      h.className='hint';
+      h.textContent=moves.get(k).length;
+      cell.appendChild(h);
+      cell.dataset.r=r; cell.dataset.c=c;
+      cell.onclick=onHumanClick;
+    }
+    boardEl.appendChild(cell);
+  }
+  const {b,w}=computeScore();
+  blackScoreEl.textContent=b;
+  whiteScoreEl.textContent=w;
+  currentPlayerEl.textContent=current===HUMAN?'黑':'白';
+  checkTurn();
+}
+
+async function dropPiece(r, c, p) {
+  const cell = boardEl.children[r * SIZE + c];
+  const piece = document.createElement('div');
+  piece.className = 'piece';
+  if(p === AI) piece.classList.add('white');
+  cell.appendChild(piece);
+  board[r][c] = p;
+
+  if(p === HUMAN){
+    piece.style.transform = 'translateY(-120%) rotateY(0deg)';
+    piece.style.transition = 'transform 0.6s cubic-bezier(0.25,1.5,0.5,1)';
+    requestAnimationFrame(()=>{ piece.style.transform = 'translateY(0) rotateY(0deg)'; });
+    await new Promise(res=>setTimeout(res,600));
+  }
+}
+
+async function flipPiece(rr, cc, p){
+  const cell = boardEl.children[rr * SIZE + cc];
+  const piece = cell.querySelector('.piece');
+  if(!piece) return;
+  piece.classList.add('flip');
+  await new Promise(res=>setTimeout(res,500));
+  if(p===AI) piece.classList.add('white'); else piece.classList.remove('white');
+  piece.classList.remove('flip');
+  board[rr][cc]=p;
+}
+
+async function placeMoveAnimated(r, c, p, flips){
+  await dropPiece(r,c,p);
+  for(const [rr,cc] of flips) await flipPiece(rr,cc,p);
+  render();
+}
+
+async function onHumanClick(e){
+  if(current!==HUMAN || gameOver) return;
+  const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+  const f=flipsForMove(r,c,HUMAN);
+  if(!f.length) return;
+  await placeMoveAnimated(r,c,HUMAN,f);
+  current=AI; aiThinking=false;
+  render();
+}
+
+async function aiMove(){
+  if(aiThinking || gameOver) return;
+  aiThinking=true;
+  const moves=getLegalMoves(AI);
+  if(!moves.size){ aiThinking=false; return; }
+
+  let choice;
+  if(aiLevel==='easy'){
+    const arr=[...moves.entries()];
+    const pick=arr[Math.floor(Math.random()*arr.length)];
+    const [r,c]=pick[0].split(',').map(Number);
+    choice={r,c,f:pick[1]};
+  } else {
+    let best=null, bestScore=-1e9;
+    for(const [k,f] of moves){
+      const [r,c]=k.split(',').map(Number);
+      const sim=cloneBoard(board);
+      applyMoveSim(sim,r,c,AI,f);
+      const opp=getLegalMovesSim(sim,HUMAN);
+      let worst=0;
+      if(opp.size){
+        worst=Math.max(...[...opp.entries()].map(([kk,ff])=>{
+          const [rr,cc]=kk.split(',').map(Number);
+          const b2=cloneBoard(sim);
+          applyMoveSim(b2,rr,cc,HUMAN,ff);
+          return evaluateBoard(b2);
+        }));
+      }
+      const score=evaluateBoard(sim)-worst*0.8;
+      if(score>bestScore){ bestScore=score; best={r,c,f}; }
+    }
+    choice = best;
+  }
+
+  await placeMoveAnimated(choice.r,choice.c,AI,choice.f);
+  current=HUMAN; aiThinking=false;
+  render();
+}
+
+async function checkTurn(){
+  if(gameOver) return;
+  const moves=getLegalMoves(current);
+  if(moves.size){
+    if(current===AI && !aiThinking) setTimeout(aiMove,400);
+    return;
+  }
+  const other=current===HUMAN?AI:HUMAN;
+  if(getLegalMoves(other).size){
+    alert('無子可下，跳過回合');
+    current=other;
+    render();
+    return;
+  }
+  gameOver=true;
+  const {b,w}=computeScore();
+  let msg=`遊戲結束 黑 ${b} : 白 ${w}`;
+  if(b>w) msg+=' 黑方獲勝！';
+  else if(w>b) msg+=' 白方獲勝！';
+  else msg+=' 平手！';
+  setTimeout(()=>alert(msg),100);
+}
+
+document.querySelectorAll('input[name="aiLevel"]').forEach(r=>{
+  r.onchange=e=>{ aiLevel=e.target.value; initBoard(); }
+});
+restartBtn.onclick = initBoard;
+initBoard();
+</script>
+</body>
 </html>
