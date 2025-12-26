@@ -504,6 +504,9 @@ function newGame(){
     document.getElementById('passBtn').disabled=false;
     document.getElementById('passBtn').textContent='讓子';
     document.getElementById('aiToggleBtn').textContent='AI開關 (開)';
+    game.updateScores();
+    game.consecutivePasses = 0;
+    game.updatePassUI();
 }
 function toggleAI(){
     if(!game) return;
@@ -514,3 +517,4 @@ window.onload=newGame;
 </script>
 </body>
 </html>
+
